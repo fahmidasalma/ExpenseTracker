@@ -1,0 +1,28 @@
+:root {
+  --header-bg: #161617; 
+}
+#header {
+  background: var(--header-bg);
+  color: var(--header-color); 
+}
+div.breadcrumbs {
+  background: rgb(1, 29, 32);
+  color: #ffffff;
+}
+
+.login .submit-row {
+  padding: 0px !important;
+}
+
+input[type="submit"],
+input[type="button"],
+.submit-row input {
+  width: 100%;
+  background:rgb(1, 29, 32);
+}
+
+.module h2,
+.module caption,
+.inline-group h2 {
+  background: rgb(1, 29, 32);
+}

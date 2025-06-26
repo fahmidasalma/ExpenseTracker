@@ -1,0 +1,126 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Expense Report</title>
+
+  <style>
+    @page {
+      margin: 1.5cm 1.5cm 3.5cm 1.5cm;
+      size: A4;
+      @bottom-right {
+        content: "Page " counter(page) " of " counter(pages);
+      }
+    }
+
+    body {
+      font-family: 'Arial', sans-serif;
+      font-size: 12px;
+      color: #333;
+      margin: 0;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .logo {
+      width: 100px;
+    }
+
+    h2 {
+      text-align: center;
+      margin-top: 0;
+      margin-bottom: 10px;
+      font-size: 20px;
+      color: #2c3e50;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    }
+
+    thead {
+      background-color: #2c3e50;
+      color: white;
+    }
+
+    thead th {
+      padding: 10px;
+      text-align: center;
+      border: 1px solid #ccc;
+      font-weight: bold;
+    }
+
+    tbody td {
+      padding: 10px;
+      border: 1px solid #ddd;
+    }
+
+    tr.bg-f9f9f9 {
+      background-color: #f9f9f9;
+    }
+
+    tr.bg-ffffff {
+      background-color: #ffffff;
+    }
+
+    tfoot tr {
+      background-color: #e2e2e2;
+      font-weight: bold;
+    }
+
+    tfoot td {
+      padding: 10px;
+      border: 1px solid #ccc;
+    }
+
+  </style>
+</head>
+<body>
+
+  <header style="display: flex; justify-content: center; align-items: center; margin-bottom: 50px;">
+    <img src="http://127.0.0.1:8000/static/img/Finova.png" alt="Logo" style="width: 90px; height: auto;" />
+  </header>
+
+  <h2>Expense List</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>No</th>
+        <th>Amount</th>
+        <th>Category</th>
+        <th>Description</th>
+        <th>Date</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for expense in expenses %}
+      <tr class="{% cycle 'bg-f9f9f9' 'bg-ffffff' %}">
+        <td>{{ forloop.counter }}</td>
+        <td>{{ expense.amount }}</td>
+        <td>{{ expense.category }}</td>
+        <td>{{ expense.description }}</td>
+        <td>{{ expense.date|date:"Y-m-d" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+    <tfoot>
+      <tr>
+        <td colspan="1">Total</td>
+        <td colspan="4">{{ total }}</td>
+      </tr>
+    </tfoot>
+  </table>
+
+</body>
+</html>

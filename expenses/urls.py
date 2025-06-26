@@ -1,13 +1,17 @@
 from django.urls import path
-from django.contrib.auth import views as auth_views
-from django.conf import settings
-from django.conf.urls.static import static
 from . import views
+from django.views.decorators.csrf import csrf_exempt
 
 urlpatterns = [
     path('', views.index, name='expenses'),
-    path('add-expense', views.add_expense, name='add-expense'),
-    path('logout/', auth_views.LogoutView.as_view(), name='logout'),  # Add this line
+    path('add-expense/', views.add_expense, name='add-expense'),
+    path('edit-expense/<int:id>', views.expense_edit, name='expense-edit'),
+    path('expense-delete/<int:id>', views.expense_delete, name='expense-delete'),
+    path('search-expenses', csrf_exempt(views.search_expenses), name='search-expenses'), 
+    path('expense_category_summary/', views.expense_category_summary, name='expense-category-summary'),
+    path('stats/', views.stats_view, name='stats'),
+    path('export_csv/', views.export_csv, name='export-csv'),
+    path('export_excel/', views.export_excel, name='export-excel'),
+    path('export_pdf/', views.export_pdf, name='export-pdf'),
+
 ]
-if settings.DEBUG:
-    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
