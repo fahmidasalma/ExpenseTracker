@@ -1,8 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
 
-
-
 {% block content %}
 <div class="container mt-4">
   <div class="row">
@@ -10,7 +8,7 @@
       <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
           <li class="breadcrumb-item">
-            <a href="">Expenses Summary</a>
+            <a href="{% url 'expenses' %}">Expenses</a>
           </li>
           <li class="breadcrumb-item active" aria-current="page">
             Summary
@@ -20,16 +18,105 @@
     </div>
 
     <div class="col-md-2">
-      <a href="" class="btn btn-primary">Back</a>
+      <a href="{% url 'expenses' %}" class="btn btn-primary">
+        <i class="fa fa-arrow-left"></i> Back
+      </a>
     </div>
-
-    <canvas id="myChart" width="400" height="400"></canvas>
-  </div>  
+  </div>
+  
+  <div class="row mt-4">
+    <div class="col-12">
+      <h2>Expense Summary</h2>
+      <p class="text-muted">Visual breakdown of your expenses by category for the last 6 months</p>
+    </div>
+  </div>
+  
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title mb-0">
+            <i class="fa fa-pie-chart"></i> Expenses by Category
+          </h5>
+        </div>
+        <div class="card-body">
+          <!-- Loading indicator -->
+          <div id="chart-loading" class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+              <span class="sr-only">Loading chart...</span>
+            </div>
+            <p class="mt-2">Loading expense data...</p>
+          </div>
+          
+          <!-- Chart canvas -->
+          <div id="chart-container" style="display: none;">
+            <canvas id="myChart" width="400" height="400"></canvas>
+          </div>
+          
+          <!-- Error container -->
+          <div id="chart-error" style="display: none;" class="text-center py-4">
+            <!-- Error messages will be inserted here by JavaScript -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="row mt-4">
+    <div class="col-12">
+      <div class="d-flex justify-content-between">
+        <a href="{% url 'expenses' %}" class="btn btn-secondary">
+          <i class="fa fa-list"></i> View All Expenses
+        </a>
+        <a href="{% url 'add-expense' %}" class="btn btn-success">
+          <i class="fa fa-plus"></i> Add New Expense
+        </a>
+      </div>
+    </div>
+  </div>
 </div>
+
+<!-- Include Chart.js from CDN if not already included -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="{% static 'js/stats.js' %}"></script>
 
+<script>
+// Hide loading and show chart when data loads successfully
+document.addEventListener('DOMContentLoaded', function() {
+  // Override the default showErrorMessage to work with our new structure
+  window.showErrorMessage = function(message) {
+    const loadingDiv = document.getElementById("chart-loading");
+    const chartContainer = document.getElementById("chart-container");
+    const errorDiv = document.getElementById("chart-error");
+    
+    if (loadingDiv) loadingDiv.style.display = "none";
+    if (chartContainer) chartContainer.style.display = "none";
+    
+    if (errorDiv) {
+      errorDiv.innerHTML = `
+        <div class="alert alert-warning">
+          <i class="fa fa-exclamation-triangle"></i>
+          <p>${message}</p>
+          <button class="btn btn-primary btn-sm" onclick="location.reload()">
+            <i class="fa fa-refresh"></i> Retry
+          </button>
+        </div>
+      `;
+      errorDiv.style.display = "block";
+    }
+  };
+  
+  // Override the renderChart function to handle our loading states
+  const originalRenderChart = window.renderChart;
+  window.renderChart = function(data, labels) {
+    const loadingDiv = document.getElementById("chart-loading");
+    const chartContainer = document.getElementById("chart-container");
+    
+    if (loadingDiv) loadingDiv.style.display = "none";
+    if (chartContainer) chartContainer.style.display = "block";
+    
+    originalRenderChart(data, labels);
+  };
+});
 </script>
-
-
-
 {% endblock content %}
