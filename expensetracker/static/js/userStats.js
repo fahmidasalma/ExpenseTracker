@@ -10,7 +10,7 @@ const updateTopMonthsUI = (topMonth, type) => {
     const topMonthElement = document.querySelector(".expense-top-month");
     const topMonthValueElement = document.querySelector(".expense-top-month-value");
     
-    if (topMonthElement && topMonthValueElement) {
+    if (topMonthElement && topMonthValueElement && topMonth) {
       topMonthElement.textContent = getHumanMonth(Object.keys(topMonth)[0]);
       topMonthValueElement.textContent = Object.values(topMonth)[0];
     }
@@ -18,7 +18,7 @@ const updateTopMonthsUI = (topMonth, type) => {
     const topMonthElement = document.querySelector(".income-top-month");
     const topMonthValueElement = document.querySelector(".income-top-month-value");
     
-    if (topMonthElement && topMonthValueElement) {
+    if (topMonthElement && topMonthValueElement && topMonth) {
       topMonthElement.textContent = getHumanMonth(Object.keys(topMonth)[0]);
       topMonthValueElement.textContent = Object.values(topMonth)[0];
     }
@@ -56,6 +56,13 @@ const updateThisMonthUI = (data = [], type = "expenses") => {
 const formatStats = (data = {}, type = "expenses") => {
   const monthData = data.months;
   console.log("monthData", monthData);
+  
+  // Add null/undefined check
+  if (!monthData || typeof monthData !== 'object') {
+    console.warn(`Invalid monthData for ${type}:`, monthData);
+    return;
+  }
+  
   const vals = Object.values(monthData);
   const s = vals.map((item, i) => ({ [i + 1]: item }));
 
@@ -74,67 +81,169 @@ const formatStats = (data = {}, type = "expenses") => {
   updateTopMonthsUI(topMonth, type);
 };
 
-// Fixed setGraphs function - no longer empty!
 const setGraphs = (data) => {
-  const [thisYearExpenses, expenseCategories, incomeSources, thisYearIncome] = data;
-  
-  // Create expense trend chart if canvas exists
-  const expenseChartCanvas = document.getElementById("expenseChart");
-  if (expenseChartCanvas) {
-    const ctx = expenseChartCanvas.getContext('2d');
-    const monthlyData = thisYearExpenses.this_year_expenses_data.months;
-    
-    new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: Object.keys(monthlyData).map(month => getHumanMonth(month)),
-        datasets: [{
-          label: 'Monthly Expenses',
-          data: Object.values(monthlyData),
-          borderColor: 'rgb(75, 192, 192)',
-          backgroundColor: 'rgba(75, 192, 192, 0.2)',
-          tension: 0.1
-        }]
-      },
-      options: {
-        responsive: true,
-        scales: {
-          y: {
-            beginAtZero: true
-          }
-        }
-      }
-    });
+  const [
+    thisYearExpenses,
+    expenseCategories,
+    incomeSources,
+    thisYearIncome,
+  ] = data;
+
+  // Render Expense Summary Chart
+  if (expenseCategories && expenseCategories.expenses_category_data) {
+    renderExpenseChart(expenseCategories.expenses_category_data);
   }
-  
-  // Create category distribution chart if canvas exists
-  const categoryChartCanvas = document.getElementById("categoryChart");
-  if (categoryChartCanvas) {
-    const ctx = categoryChartCanvas.getContext('2d');
-    const categoryData = expenseCategories.expenses_category_data;
-    
-    new Chart(ctx, {
-      type: 'doughnut',
-      data: {
-        labels: Object.keys(categoryData),
-        datasets: [{
-          label: 'Expense Categories',
-          data: Object.values(categoryData),
+
+  // Render Income Summary Chart  
+  if (incomeSources && incomeSources.income_sources_data) {
+    renderIncomeChart(incomeSources.income_sources_data);
+  }
+};
+
+const renderExpenseChart = (categoryData) => {
+  const expenseCanvas = document.getElementById("expense-chart");
+  if (!expenseCanvas) {
+    console.warn("Expense chart canvas not found");
+    return;
+  }
+
+  // Clear any existing chart
+  const existingChart = Chart.getChart(expenseCanvas);
+  if (existingChart) {
+    existingChart.destroy();
+  }
+
+  const ctx = expenseCanvas.getContext("2d");
+  const labels = Object.keys(categoryData);
+  const data = Object.values(categoryData);
+
+  if (labels.length === 0) {
+    console.warn("No expense data to display");
+    return;
+  }
+
+  new Chart(ctx, {
+    type: "pie",
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: "Expense Distribution",
+          data: data,
           backgroundColor: [
-            'rgba(255, 99, 132, 0.8)',
-            'rgba(54, 162, 235, 0.8)',
-            'rgba(255, 205, 86, 0.8)',
-            'rgba(75, 192, 192, 0.8)',
-            'rgba(153, 102, 255, 0.8)',
-            'rgba(255, 159, 64, 0.8)',
-          ]
-        }]
+            "rgba(255, 99, 132, 0.8)",
+            "rgba(54, 162, 235, 0.8)",
+            "rgba(255, 206, 86, 0.8)",
+            "rgba(75, 192, 192, 0.8)",
+            "rgba(153, 102, 255, 0.8)",
+            "rgba(255, 159, 64, 0.8)",
+            "rgba(201, 203, 207, 0.8)",
+            "rgba(255, 99, 255, 0.8)",
+          ],
+          borderColor: [
+            "rgba(255, 99, 132, 1)",
+            "rgba(54, 162, 235, 1)", 
+            "rgba(255, 206, 86, 1)",
+            "rgba(75, 192, 192, 1)",
+            "rgba(153, 102, 255, 1)",
+            "rgba(255, 159, 64, 1)",
+            "rgba(201, 203, 207, 1)",
+            "rgba(255, 99, 255, 1)",
+          ],
+          borderWidth: 2,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        title: {
+          display: true,
+          text: "Expense Summary by Category",
+          font: {
+            size: 16,
+            weight: 'bold'
+          }
+        },
+        legend: {
+          position: "bottom",
+        },
       },
-      options: {
-        responsive: true
-      }
-    });
+    },
+  });
+};
+
+const renderIncomeChart = (sourceData) => {
+  const incomeCanvas = document.getElementById("income-chart");
+  if (!incomeCanvas) {
+    console.warn("Income chart canvas not found");
+    return;
   }
+
+  // Clear any existing chart
+  const existingChart = Chart.getChart(incomeCanvas);
+  if (existingChart) {
+    existingChart.destroy();
+  }
+
+  const ctx = incomeCanvas.getContext("2d");
+  const labels = Object.keys(sourceData);
+  const data = Object.values(sourceData);
+
+  if (labels.length === 0) {
+    console.warn("No income data to display");
+    return;
+  }
+
+  new Chart(ctx, {
+    type: "pie", 
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: "Income Distribution",
+          data: data,
+          backgroundColor: [
+            "rgba(75, 192, 192, 0.8)",
+            "rgba(54, 162, 235, 0.8)",
+            "rgba(153, 102, 255, 0.8)",
+            "rgba(255, 206, 86, 0.8)",
+            "rgba(255, 99, 132, 0.8)",
+            "rgba(255, 159, 64, 0.8)",
+            "rgba(201, 203, 207, 0.8)",
+          ],
+          borderColor: [
+            "rgba(75, 192, 192, 1)",
+            "rgba(54, 162, 235, 1)",
+            "rgba(153, 102, 255, 1)",
+            "rgba(255, 206, 86, 1)",
+            "rgba(255, 99, 132, 1)",
+            "rgba(255, 159, 64, 1)",
+            "rgba(201, 203, 207, 1)",
+          ],
+          borderWidth: 2,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        title: {
+          display: true,
+          text: "Income Summary by Source",
+          font: {
+            size: 16,
+            weight: 'bold'
+          }
+        },
+        legend: {
+          position: "bottom",
+        },
+      },
+    },
+  });
 };
 
 const fetchData = () => {
@@ -167,7 +276,6 @@ const fetchData = () => {
   const promise3 = fetch("/income/income_sources_data/")
     .then((res) => {
       if (!res.ok) {
-        // If income endpoints don't exist yet, return empty data
         return Promise.resolve({ income_sources_data: {} });
       }
       return res.json();
@@ -181,7 +289,6 @@ const fetchData = () => {
   const promise4 = fetch("/income/income_summary_rest/")
     .then((res) => {
       if (!res.ok) {
-        // If income endpoints don't exist yet, return empty data
         return Promise.resolve({ this_year_income_data: { months: {} } });
       }
       return res.json();
@@ -209,12 +316,6 @@ const fetchData = () => {
     })
     .catch((errs) => {
       console.error("Error loading dashboard data:", errs);
-      // Display user-friendly error message
-      const errorElement = document.getElementById("dashboard-error");
-      if (errorElement) {
-        errorElement.textContent = "Unable to load dashboard data. Please refresh the page.";
-        errorElement.style.display = "block";
-      }
     });
 };
 

@@ -11,112 +11,191 @@
             <a href="{% url 'expenses' %}">Expenses</a>
           </li>
           <li class="breadcrumb-item active" aria-current="page">
-            Summary
+            Financial Analysis
           </li>
         </ol>
       </nav>
     </div>
-
     <div class="col-md-2">
-      <a href="{% url 'expenses' %}" class="btn btn-primary">
-        <i class="fa fa-arrow-left"></i> Back
-      </a>
+      <a href="{% url 'expenses' %}" class="btn btn-primary">Back</a>
     </div>
   </div>
-  
-  <div class="row mt-4">
-    <div class="col-12">
-      <h2>Expense Summary</h2>
-      <p class="text-muted">Visual breakdown of your expenses by category for the last 6 months</p>
-    </div>
-  </div>
-  
+
+  <h2 class="mb-4">Financial Analysis Dashboard</h2>
+  <p class="text-muted mb-4">Your financial analysis will be displayed here.</p>
+
   <div class="row">
-    <div class="col-12">
+    <div class="col-md-6">
       <div class="card">
         <div class="card-header">
-          <h5 class="card-title mb-0">
-            <i class="fa fa-pie-chart"></i> Expenses by Category
-          </h5>
+          <h5>Expense Summary</h5>
         </div>
         <div class="card-body">
-          <!-- Loading indicator -->
-          <div id="chart-loading" class="text-center py-4">
-            <div class="spinner-border text-primary" role="status">
-              <span class="sr-only">Loading chart...</span>
-            </div>
-            <p class="mt-2">Loading expense data...</p>
-          </div>
-          
-          <!-- Chart canvas -->
-          <div id="chart-container" style="display: none;">
-            <canvas id="myChart" width="400" height="400"></canvas>
-          </div>
-          
-          <!-- Error container -->
-          <div id="chart-error" style="display: none;" class="text-center py-4">
-            <!-- Error messages will be inserted here by JavaScript -->
+          <div style="position: relative; height: 400px;">
+            <canvas id="myChart"></canvas>
           </div>
         </div>
       </div>
     </div>
-  </div>
-  
-  <div class="row mt-4">
-    <div class="col-12">
-      <div class="d-flex justify-content-between">
-        <a href="{% url 'expenses' %}" class="btn btn-secondary">
-          <i class="fa fa-list"></i> View All Expenses
-        </a>
-        <a href="{% url 'add-expense' %}" class="btn btn-success">
-          <i class="fa fa-plus"></i> Add New Expense
-        </a>
+    
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">
+          <h5>Category Breakdown</h5>
+        </div>
+        <div class="card-body">
+          <div style="position: relative; height: 400px;">
+            <canvas id="categoryChart"></canvas>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Include Chart.js from CDN if not already included -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="{% static 'js/stats.js' %}"></script>
-
 <script>
-// Hide loading and show chart when data loads successfully
 document.addEventListener('DOMContentLoaded', function() {
-  // Override the default showErrorMessage to work with our new structure
-  window.showErrorMessage = function(message) {
-    const loadingDiv = document.getElementById("chart-loading");
-    const chartContainer = document.getElementById("chart-container");
-    const errorDiv = document.getElementById("chart-error");
+    console.log("DOM loaded, starting chart initialization");
     
-    if (loadingDiv) loadingDiv.style.display = "none";
-    if (chartContainer) chartContainer.style.display = "none";
-    
-    if (errorDiv) {
-      errorDiv.innerHTML = `
-        <div class="alert alert-warning">
-          <i class="fa fa-exclamation-triangle"></i>
-          <p>${message}</p>
-          <button class="btn btn-primary btn-sm" onclick="location.reload()">
-            <i class="fa fa-refresh"></i> Retry
-          </button>
-        </div>
-      `;
-      errorDiv.style.display = "block";
+    // Check if Chart.js is available
+    if (typeof Chart === 'undefined') {
+        console.error('Chart.js is not loaded');
+        return;
     }
-  };
-  
-  // Override the renderChart function to handle our loading states
-  const originalRenderChart = window.renderChart;
-  window.renderChart = function(data, labels) {
-    const loadingDiv = document.getElementById("chart-loading");
-    const chartContainer = document.getElementById("chart-container");
     
-    if (loadingDiv) loadingDiv.style.display = "none";
-    if (chartContainer) chartContainer.style.display = "block";
+    // Check if canvas exists
+    const canvas = document.getElementById('myChart');
+    const categoryCanvas = document.getElementById('categoryChart');
     
-    originalRenderChart(data, labels);
-  };
+    if (!canvas) {
+        console.error('Canvas element not found');
+        return;
+    }
+    
+    console.log('Fetching data from API...');
+    
+    fetch('/expense_category_summary/', {
+        method: 'GET',
+        credentials: 'same-origin'
+    })
+        .then(response => {
+            console.log('Response status:', response.status);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Data received:', data);
+            
+            if (data.expense_category_data && Object.keys(data.expense_category_data).length > 0) {
+                const categories = Object.keys(data.expense_category_data);
+                const amounts = Object.values(data.expense_category_data);
+                
+                console.log('Categories:', categories);
+                console.log('Amounts:', amounts);
+                
+                // Create doughnut chart
+                const ctx = canvas.getContext('2d');
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: categories,
+                        datasets: [{
+                            label: 'Expense Amount',
+                            data: amounts,
+                            backgroundColor: [
+                                '#FF6384',
+                                '#36A2EB', 
+                                '#FFCE56',
+                                '#4BC0C0',
+                                '#9966FF',
+                                '#FF9F40'
+                            ],
+                            borderColor: [
+                                '#FF6384',
+                                '#36A2EB', 
+                                '#FFCE56',
+                                '#4BC0C0',
+                                '#9966FF',
+                                '#FF9F40'
+                            ],
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Expenses by Category'
+                            },
+                            legend: {
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+                
+                // Create bar chart
+                if (categoryCanvas) {
+                    const ctx2 = categoryCanvas.getContext('2d');
+                    new Chart(ctx2, {
+                        type: 'bar',
+                        data: {
+                            labels: categories,
+                            datasets: [{
+                                label: 'Amount',
+                                data: amounts,
+                                backgroundColor: [
+                                    'rgba(255, 99, 132, 0.6)',
+                                    'rgba(54, 162, 235, 0.6)',
+                                    'rgba(255, 206, 86, 0.6)',
+                                    'rgba(75, 192, 192, 0.6)',
+                                    'rgba(153, 102, 255, 0.6)',
+                                    'rgba(255, 159, 64, 0.6)'
+                                ],
+                                borderColor: [
+                                    'rgba(255, 99, 132, 1)',
+                                    'rgba(54, 162, 235, 1)',
+                                    'rgba(255, 206, 86, 1)',
+                                    'rgba(75, 192, 192, 1)',
+                                    'rgba(153, 102, 255, 1)',
+                                    'rgba(255, 159, 64, 1)'
+                                ],
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: 'Category Breakdown'
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                }
+                            }
+                        }
+                    });
+                }
+                
+                console.log('Charts created successfully');
+            } else {
+                console.log('No expense data available');
+                canvas.parentElement.innerHTML = '<p class="text-center text-muted">No expense data available. <a href="/add-expense/">Add some expenses</a> to see the chart.</p>';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            canvas.parentElement.innerHTML = '<p class="text-center text-danger">Error loading chart data. Please try again.</p>';
+        });
 });
 </script>
+
 {% endblock content %}

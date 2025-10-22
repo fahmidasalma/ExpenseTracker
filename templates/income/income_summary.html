@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="row">
+    <div class="col-md-10">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item">
+            <a href="">Income Summary</a>
+          </li>
+          <li class="breadcrumb-item active" aria-current="page">
+            Summary
+          </li>
+        </ol>
+      </nav>
+    </div>
+
+    <div class="col-md-2">
+      <a href="{% url 'income' %}" class="btn btn-primary">Back</a>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">
+          <h5>Income by Source</h5>
+        </div>
+        <div class="card-body">
+          <canvas id="incomeSourceChart" width="400" height="400"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">
+          <h5>Monthly Income Trend</h5>
+        </div>
+        <div class="card-body">
+          <div class="summary-stats">
+            <div class="row">
+              <div class="col-md-6">
+                <h6>This Month</h6>
+                <p class="income-this-month"></p>
+                <p class="income-this-month-value"></p>
+              </div>
+              <div class="col-md-6">
+                <h6>Top Month</h6>
+                <p class="income-top-month"></p>
+                <p class="income-top-month-value"></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="{% static 'js/incomeStats.js' %}"></script>
+{% endblock content %}

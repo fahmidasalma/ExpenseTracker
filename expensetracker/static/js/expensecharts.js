@@ -69,4 +69,4 @@ const getCategoryData = () => {
   const labels = ["TRAVEL", "FOOD", "FRIENDS", "FAMILY"];
 };
 
-document.onload = getCategoryData();
+document.addEventListener('DOMContentLoaded', getCategoryData);

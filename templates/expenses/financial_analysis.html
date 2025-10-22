@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="row">
+    <div class="col-md-12">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item">
+            <a href="{% url 'expenses' %}">Expenses</a>
+          </li>
+          <li class="breadcrumb-item active" aria-current="page">
+            Financial Analysis
+          </li>
+        </ol>
+      </nav>
+    </div>
+  </div>
+
+  <div class="container">
+    {% include 'partials/_messages.html' %}
+    
+    <div class="row">
+      <div class="col-md-12">
+        <div class="card">
+          <div class="card-header">
+            <h4>Financial Analysis Dashboard</h4>
+          </div>
+          <div class="card-body">
+            <p>Your financial analysis will be displayed here.</p>
+            
+            <!-- You can add charts, statistics, and other analysis content here -->
+            <div class="row">
+              <div class="col-md-6">
+                <div class="card">
+                  <div class="card-header">
+                    <h5>Expense Summary</h5>
+                  </div>
+                  <div class="card-body">
+                    <!-- Add expense summary content -->
+                    <p>Expense analysis content goes here.</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="col-md-6">
+                <div class="card">
+                  <div class="card-header">
+                    <h5>Category Breakdown</h5>
+                  </div>
+                  <div class="card-body">
+                    <!-- Add category breakdown content -->
+                    <p>Category breakdown content goes here.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
